@@ -51,19 +51,20 @@ router.get('/member', auth, async (req, res) => {
   }
 });
 
-router.get('/member/:id', auth, async (req, res) => {
+router.get('/member/:id', async (req, res) => {
   const _id = req.params.id;
 
   try {
-    const task = await Member.findOne({ _id, owner: req.user._id });
+    const member = await Member.findOne({ _id });
 
-    if (!task) {
+    if (!member) {
       return res.status(404).send();
     }
 
     res.send(task);
   } catch (e) {
-    res.status(500).send();
+    console.log('Error while getting record with id {}', _id, e);
+    res.status(404).send();
   }
 });
 
