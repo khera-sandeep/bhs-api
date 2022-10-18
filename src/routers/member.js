@@ -2,10 +2,11 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const Member = require('../models/member');
 const router = new express.Router();
+const mongoose = require('mongoose');
 
 router.post('/member', async (req, res) => {
   try {
-    console.log('Inside create member api' + req.body);
+    console.log('Inside create member api' + JSON.stringify(req.body));
     const member = new Member({
       ...req.body,
     });
@@ -56,13 +57,15 @@ router.get('/member/:id', async (req, res) => {
   const _id = req.params.id;
   console.log('Inside get member api' + req.params.id);
   try {
-    const member = await Member.findOne({ _id });
+    var mid = mongoose.Types.ObjectId(_id);
+    const member = await Member.find({ _id: mid });
 
     if (!member) {
+      console.log('Not found member with id ' + req.params.id);
       return res.status(404).send();
     }
 
-    res.send(task);
+    res.send(member);
   } catch (e) {
     console.log('Error while getting record with id {}', _id, e);
     res.status(404).send();
