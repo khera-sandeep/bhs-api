@@ -133,6 +133,7 @@ router.get('/users/:id/avatar', async (req, res) => {
 });
 
 router.get('/ping', async (req, res) => {
+  console.log('Called ping API');
   res.status(200).send('pong');
 });
 

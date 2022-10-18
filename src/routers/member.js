@@ -5,6 +5,7 @@ const router = new express.Router();
 
 router.post('/member', async (req, res) => {
   try {
+    console.log('Inside create member api' + req.body);
     const member = new Member({
       ...req.body,
     });
@@ -53,7 +54,7 @@ router.get('/member', auth, async (req, res) => {
 
 router.get('/member/:id', async (req, res) => {
   const _id = req.params.id;
-
+  console.log('Inside get member api' + req.params.id);
   try {
     const member = await Member.findOne({ _id });
 
