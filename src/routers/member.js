@@ -4,11 +4,12 @@ const Member = require('../models/member');
 const router = new express.Router();
 const mongoose = require('mongoose');
 
-router.post('/member', async (req, res) => {
+router.post('/member', auth, async (req, res) => {
   try {
     console.log('Inside create member api' + JSON.stringify(req.body));
     const member = new Member({
       ...req.body,
+      referer: req.user._id,
     });
 
     await member.save();
@@ -53,7 +54,7 @@ router.get('/member', auth, async (req, res) => {
   }
 });
 
-router.get('/member/:id', async (req, res) => {
+router.get('/member/:id', auth, async (req, res) => {
   const _id = req.params.id;
   console.log('Inside get member api' + req.params.id);
   try {
