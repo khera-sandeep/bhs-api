@@ -9,14 +9,13 @@ router.post('/member', auth, async (req, res) => {
     console.log('Inside create member api' + JSON.stringify(req.body));
     const member = new Member({
       ...req.body,
-      referer: req.user._id,
     });
-
+    await findDuplicate(member.name, member.age, member.mobileNumber);
     await member.save();
     res.status(201).send(member);
   } catch (e) {
     console.log('Error while saving member', e);
-    res.status(400).send(e);
+    res.status(400).send({ errors: { message: e.message } });
   }
 });
 
@@ -118,5 +117,16 @@ router.delete('/member/:id', auth, async (req, res) => {
     res.status(500).send();
   }
 });
+
+var findDuplicate = async (name, age, mobileNumber) => {
+  const member = await Member.findOne({ name, age, mobileNumber });
+
+  if (member) {
+    throw new Error(
+      `Member with name: ${name} age: ${age} mobileNumber: ${mobileNumber} already exists`
+    );
+  }
+  return member;
+};
 
 module.exports = router;

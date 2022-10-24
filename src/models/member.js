@@ -69,9 +69,10 @@ const memberSchema = new mongoose.Schema(
       },
     },
     referer: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
+      trim: true,
+      lowercase: true,
       required: false,
-      ref: 'user',
     },
   },
   {
