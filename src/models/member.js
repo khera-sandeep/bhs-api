@@ -9,7 +9,7 @@ const person = new mongoose.Schema({
   },
   age: {
     type: Number,
-    min: 1,
+    min: 0,
     max: 100,
     required: true,
   },
