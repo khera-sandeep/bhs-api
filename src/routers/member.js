@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 router.post('/member', auth, async (req, res) => {
   try {
-    console.log('Inside create member api' + JSON.stringify(req.body));
+    console.log('Inside create member API ' + JSON.stringify(req.body));
     const member = new Member({
       ...req.body,
     });
