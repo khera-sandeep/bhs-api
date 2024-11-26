@@ -8,10 +8,11 @@ const person = new mongoose.Schema({
     trim: true,
   },
   age: {
-    type: Number,
-    min: 0,
-    max: 100,
-    required: true,
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+      required: true
   },
 });
 
@@ -36,11 +37,11 @@ const memberSchema = new mongoose.Schema(
       trim: true,
     },
     age: {
-      type: Number,
-      min: 1,
-      max: 100,
-      default: 0,
-      required: true,
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0,
+        required: true
     },
     familyMembers: [
       {
