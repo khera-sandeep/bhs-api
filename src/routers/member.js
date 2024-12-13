@@ -29,7 +29,6 @@ router.get('/member', auth, authorizationMiddleware(RoleEnum.MANAGER),
       console.log('Getting memeber list with query params {}', req.query);
       try {
         let limit = 0;
-        let sort = '1';
         let skip = 0;
         let filter = {};
         for (let queryKey in req.query) {
@@ -45,7 +44,7 @@ router.get('/member', auth, authorizationMiddleware(RoleEnum.MANAGER),
           }
           else {filter[queryKey] = value;}
         }
-        let memberList = await Member.find(filter).limit(limit).skip(skip).sort(sort);
+        let memberList = await Member.find(filter).limit(limit).skip(skip).sort({ createdAt: -1 });
         let count  = await Member.countDocuments(filter);
         console.log('Count returned {} {}', req.query, count);
         res.send({data: memberList, count: count});
