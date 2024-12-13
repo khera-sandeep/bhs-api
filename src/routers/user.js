@@ -8,6 +8,7 @@ const router = new express.Router();
 const googleAuth= require('../middleware/auth-googleouth');
 const authorizationMiddleware = require('../middleware/authorization');
 const RoleEnum = require('../enums/roleenum');
+let pingTime = 0;
 
 router.post('/user', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
   const user = new User(req.body);
@@ -111,7 +112,10 @@ router.get('/user/:id/avatar', auth, async (req, res) => {
 });
 
 router.get('/ping', async (req, res) => {
-  console.log('Called ping API');
+  if(Date.now() - pingTime > 600000) {
+    pingTime = Date.now();
+    console.log('Called ping API');
+  }
   res.status(200).send('pong');
 });
 
