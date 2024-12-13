@@ -1,12 +1,14 @@
 const express = require('express');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth-local');
 const Member = require('../models/member');
 const router = new express.Router();
 const mongoose = require('mongoose');
+const authorizationMiddleware = require('../middleware/authorization');
+const RoleEnum = require("../enums/roleenum");
 
 router.post('/member', auth, async (req, res) => {
   try {
-    console.log('Inside create member API ' + JSON.stringify(req.body));
+    console.log('Inside create member API {}', req.body.name);
     const member = new Member({
       ...req.body,
     });
@@ -22,38 +24,37 @@ router.post('/member', auth, async (req, res) => {
 // GET /tasks?completed=true
 // GET /tasks?limit=10&skip=20
 // GET /tasks?sortBy=createdAt:desc
-router.get('/member', auth, async (req, res) => {
-  const match = {};
-  const sort = {};
+router.get('/member', auth, authorizationMiddleware(RoleEnum.MANAGER),
+    async (req, res) => {
+      console.log('Getting memeber list with query params {}', req.query);
+      try {
+        let limit = 0;
+        let sort = '1';
+        let skip = 0;
+        let filter = {};
+        for (let queryKey in req.query) {
+          const value = req.query[queryKey];
+          if (queryKey === 'sortBy') {
+            sort = value
+          }
+          else if (queryKey === 'limit') {
+            limit = parseInt(value);
+          }
+          else if (queryKey === 'skip') {
+            skip = parseInt(value);
+          }
+          else {filter[queryKey] = value;}
+        }
+        let memberList = await Member.find(filter).limit(limit).skip(skip).sort(sort);
+        let count  = await Member.countDocuments(filter);
+        console.log('Count returned {} {}', req.query, count);
+        res.send({data: memberList, count: count});
+      } catch (e) {
+        res.status(500).send();
+      }
+    });
 
-  if (req.query.completed) {
-    match.completed = req.query.completed === 'true';
-  }
-
-  if (req.query.sortBy) {
-    const parts = req.query.sortBy.split(':');
-    sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
-  }
-
-  try {
-    await req.user
-      .populate({
-        path: 'member',
-        match,
-        options: {
-          limit: parseInt(req.query.limit),
-          skip: parseInt(req.query.skip),
-          sort,
-        },
-      })
-      .execPopulate();
-    res.send(req.user.tasks);
-  } catch (e) {
-    res.status(500).send();
-  }
-});
-
-router.get('/member/:id', auth, async (req, res) => {
+router.get('/member/:id', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
   const _id = req.params.id;
   console.log('Inside get member api' + req.params.id);
   try {
@@ -72,7 +73,7 @@ router.get('/member/:id', auth, async (req, res) => {
   }
 });
 
-router.patch('/member/:id', auth, async (req, res) => {
+router.patch('/member/:id', auth, authorizationMiddleware(RoleEnum.MANAGER), async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['description', 'completed'];
   const isValidOperation = updates.every((update) =>
@@ -101,7 +102,7 @@ router.patch('/member/:id', auth, async (req, res) => {
   }
 });
 
-router.delete('/member/:id', auth, async (req, res) => {
+router.delete('/member/:id', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
   try {
     const task = await Member.findOneAndDelete({
       _id: req.params.id,
@@ -118,7 +119,7 @@ router.delete('/member/:id', auth, async (req, res) => {
   }
 });
 
-var findDuplicate = async (name, age, mobileNumber) => {
+const findDuplicate = async (name, age, mobileNumber) => {
   const member = await Member.findOne({ name, age, mobileNumber });
 
   if (member) {
