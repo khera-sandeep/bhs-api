@@ -25,7 +25,7 @@ router.post('/user', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, 
 router.post('/user/login', googleAuth, async (req, res) => {
   try {
     const user = req.user;
-    console.log('User login request ', req.user);
+    console.log('User login request ', req.user.email);
     const token = await user.generateAuthToken();
     res.send({ user, token });
   } catch (e) {
