@@ -2,6 +2,8 @@ const express = require('express');
 require('./db/mongoose');
 const userRouter = require('./routers/user');
 const memberRouter = require('./routers/member');
+const termVersionRouter = require('./routers/termversion');
+const userRegistrationRouter = require('./routers/userregistration');
 const cors = require('cors');
 const rateLimit = require("express-rate-limit");
 
@@ -27,5 +29,7 @@ app.use(limiter)
 app.options('*', cors());
 app.use(memberRouter);
 app.use(userRouter);
+app.use(termVersionRouter);
+app.use(userRegistrationRouter);
 
 module.exports = app;
