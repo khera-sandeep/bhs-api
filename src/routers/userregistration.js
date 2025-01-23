@@ -19,6 +19,7 @@ router.post('/userRegistration', auth, async (req, res) => {
       status: 'PENDING',
       email: req.user.email,
       event: EventEnum.KHITAB_E_SWAR_2025,
+      'age.value' : UserRegistration.getAge(req.body.dateOfBirth),
     });
     await userRegistration.save();
     let paymentId = await userRegistration.initiatePayment(req.user);

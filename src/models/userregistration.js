@@ -67,15 +67,7 @@ const userRegistrationSchema = new mongoose.Schema(
             required: [true, 'Date of Birth is required'],
             validate: {
                 validator: function (dob) {
-                    // Check if age is between 5 and 100 years
-                    const today = new Date();
-                    let age = today.getFullYear() - dob.getFullYear();
-                    const monthDiff = today.getMonth() - dob.getMonth();
-
-                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                        age--;
-                    }
-
+                    let age  = getAge(dob);
                     return age >= 8 && age <= 30;
                 },
                 message: 'Participant must be between 8 and 30 years old'
@@ -174,6 +166,32 @@ const userRegistrationSchema = new mongoose.Schema(
 );
 
 /**
+ * Get Age of the participant
+ * @param dateOfBirth
+ * @returns {number}
+ */
+function getAge(dateOfBirth) {
+    // Check if age is between 5 and 100 years
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+/**
+ * Get Age of the participant
+ * @returns {number}
+ */
+userRegistrationSchema.statics.getAge = function (dateOfBirth) {
+    return getAge(dateOfBirth);
+}
+
+/**
  * Method to intiate a payment against a registration
  * @param amount
  * @param currency
@@ -226,16 +244,7 @@ async function updatePaymentStatus(payment, status, stausReason, lastModifiedBy,
 
 // Add a static method to find users by age
 userRegistrationSchema.statics.getAgeGroup = function (dateOfBirth) {
-    // Check if age is between 5 and 100 years
-    const dob = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const monthDiff = today.getMonth() - dob.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-        age--;
-    }
-
+    let age = getAge(dateOfBirth);
     if (age <= 17) {
         return 'JUNIOR';
     } else {
@@ -252,7 +261,6 @@ userRegistrationSchema.methods.completePayment = async function (
     signature,
 ) {
     try {
-
         // Find and update payment document
         const payment = await Payment.findOne({
             orderId: orderId,
