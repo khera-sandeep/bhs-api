@@ -6,7 +6,7 @@ const router = new express.Router();
 const authorizationMiddleware = require('../middleware/authorization');
 const RoleEnum = require('../enums/roleenum');
 
-router.post('/payment/webhook/razorpay/', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
+router.post('/payment/webhook/razorpay/', async (req, res) => {
   try {
     const paymentWebhook = new PaymentWebhook();
     paymentWebhook.request = req.body;
