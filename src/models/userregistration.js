@@ -6,6 +6,14 @@ const EventEnum = require('../enums/eventenum');
 const razorpayprovider = require('../payments/providers/razorpay');
 const Payment = require("./payments");
 
+
+// Create a Counter Schema
+const CounterSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    seq: { type: Number, default: 0 }
+});
+
+
 const ageDetails = new mongoose.Schema(
     {
         value: {
@@ -44,6 +52,9 @@ const userRegistrationSchema = new mongoose.Schema(
             required: [true],
             maxlength: [50, 'name cannot be more than 50 characters'],
             trim: true,
+        },
+        registrationNumber: {
+            type: Number
         },
         profilePhoto: {
             type: String
@@ -322,32 +333,27 @@ userRegistrationSchema.methods.getPaymentStatus = async function (orderId) {
     };
 };
 
-// Example usage in your controller:
-/*
-async function handlePaymentInitiation(req, res) {
-    try {
-        const registration = await UserRegistration.findById(req.params.registrationId);
-        const paymentDetails = await registration.initiatePayment(500, 'INR');
-        res.json(paymentDetails);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+// Middleware for Payment Schema
+userRegistrationSchema.pre('save', async function(next) {
+    if (!this.registrationNumber) {
+        try {
+            const counter = await Counter.findByIdAndUpdate(
+                { _id: 'registrationNumber' },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true }
+            );
+            this.registrationNumber = counter.seq;
+            next();
+        } catch (error) {
+            console.error('Error while generating registration number', error);
+            return next(error);
+        }
+    } else {
+        next();
     }
-}
+});
 
-async function handlePaymentCompletion(req, res) {
-    try {
-        const { paymentId, orderId, signature } = req.body;
-        const registration = await UserRegistration.findById(req.params.registrationId);
-        const result = await registration.completePayment(paymentId, orderId, signature);
-        res.json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
-
-
- */
-
+const Counter = mongoose.model('counters', CounterSchema);
 
 const UserRegistration = mongoose.model('user_registrations', userRegistrationSchema);
 

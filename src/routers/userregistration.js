@@ -23,7 +23,12 @@ router.post('/userRegistration', auth, async (req, res) => {
     });
     await userRegistration.save();
     let {paymentId, orderId} = await userRegistration.initiatePayment(req.user);
-    res.status(201).send({userRegistrationId: userRegistration._id, paymentId, orderId});
+    res.status(201).send({
+      userRegistrationId: userRegistration._id,
+      registrationNumber: userRegistration.registrationNumber,
+      paymentId,
+      orderId
+    });
   } catch (e) {
     console.log('Error while registering user', e);
     res.status(400).send({ errors: { message: e.message } });
@@ -112,7 +117,12 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       } else {
         response = await userRegistration.failPayment(razPaymentId, razOrderId, req.body.reason);
       }
-    res.send(response);
+      res.send({
+        ...response,
+        registrationNumber: userRegistration.registrationNumber
+          }
+      )
+      ;
   } catch (e) {
     res.status(400).send(e);
   }
