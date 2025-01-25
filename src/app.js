@@ -4,6 +4,7 @@ const userRouter = require('./routers/user');
 const memberRouter = require('./routers/member');
 const termVersionRouter = require('./routers/termversion');
 const userRegistrationRouter = require('./routers/userregistration');
+const paymentWebhookRouter = require('./routers/payment');
 const cors = require('cors');
 const rateLimit = require("express-rate-limit");
 
@@ -31,5 +32,6 @@ app.use(memberRouter);
 app.use(userRouter);
 app.use(termVersionRouter);
 app.use(userRegistrationRouter);
+app.use(paymentWebhookRouter);
 
 module.exports = app;
