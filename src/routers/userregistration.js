@@ -22,8 +22,8 @@ router.post('/userRegistration', auth, async (req, res) => {
       'age.value' : UserRegistration.getAge(req.body.dateOfBirth),
     });
     await userRegistration.save();
-    let paymentId = await userRegistration.initiatePayment(req.user);
-    res.status(201).send({userRegistration, paymentId});
+    let {paymentId, orderId} = await userRegistration.initiatePayment(req.user);
+    res.status(201).send({userRegistrationId: userRegistration._id, paymentId, orderId});
   } catch (e) {
     console.log('Error while registering user', e);
     res.status(400).send({ errors: { message: e.message } });

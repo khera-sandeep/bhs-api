@@ -223,7 +223,7 @@ userRegistrationSchema.methods.initiatePayment = async function (user) {
 
         await this.save();
 
-        return payment._id
+        return {paymentId: payment._id, orderId: id, status: status};
 
     } catch (error) {
         console.log('Error while intiating payment ',error);

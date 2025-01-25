@@ -2,7 +2,7 @@
  * Enum having all the roles supported by the application
  */
 class EventEnum {
-    static KHITAB_E_SWAR_2025 = new EventEnum(0,'Singing');
+    static KHITAB_E_SWAR_2025 = new EventEnum(1,'Singing');
     #value
     #category
 
