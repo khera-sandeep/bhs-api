@@ -95,7 +95,6 @@ paymentSchema.pre('save', function(next) {
     if (this.isModified('currentStatus')) {
         this.timeline.push({
             status: this.currentStatus,
-            metadata: this.metadata,
             performedBy: this.lastModifiedBy
         });
     }

@@ -6,6 +6,7 @@ const Payment = require("../models/payments");
 const UserRegistration = require("../models/userregistration");
 const User = require("../models/user");
 const {verifyWebhookSignature} = require("../payments/providers/razorpay");
+const mongoose = require("mongoose");
 
 /**
  * Method to process webhook event from razorpay
@@ -59,12 +60,12 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
     find payment object in the system
      */
     payment = await Payment.findOne({'orderId': razPayPayment.order_id});
-    if (!payment) {
+    if (!payment || !payment.registration) {
       console.log('Payment not found for webhook event {}', req.body, razPayPayment.order_id);
       throw new Error('Payment not found for webhook event');
     }
-    userRegistration = UserRegistration.findOne({_id: payment.registration});
-    if (!userRegistration) {
+    userRegistration = UserRegistration.findOne({_id: mongoose.Types.ObjectId(payment.registration)});
+    if (!userRegistration || !userRegistration._id) {
       console.log('User registration not found for payment {}', payment._id, payment.registration, req.body);
       throw new Error('User registration not found for payment');
     }

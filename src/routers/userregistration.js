@@ -87,12 +87,13 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       const razOrderId = req.body['orderId'];
       const razPaymentId = req.body['paymentId'];
       const signature = req.body['signature'];
-      if(!value || !(value === 'complete' || value === 'fail')) {
-        console.error('Invalid query param {} operation {}', req.user.email, value);
-      }
       let uid = mongoose.Types.ObjectId(req.params.id);
       let userId = mongoose.Types.ObjectId(req.user._id);
       let paymentId = mongoose.Types.ObjectId(req.params.paymentId);
+      if(!value || !(value === 'complete' || value === 'fail')) {
+        console.error('Invalid query param {} operation {}', req.user.email, value, uid, paymentId);
+        throw new Error('Invalid operation for updating payment' + value + uid + paymentId);
+      }
       const userRegistration = await UserRegistration.findOne({_id: uid, createdBy: userId});
       if(!userRegistration) {
         console.error('User registration not found {} {}', uid, userId);
@@ -114,7 +115,7 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       let response = {};
       if (value === 'complete') {
         response = await userRegistration.completePayment(razPaymentId, razOrderId, req.body.signature);
-      } else {
+      } else if (value === 'fail') {
         response = await userRegistration.failPayment(razPaymentId, razOrderId, req.body.reason);
       }
       res.send({
