@@ -12,7 +12,7 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
     paymentWebhook.request = req.body;
     paymentWebhook.headers = req.headers;
     paymentWebhook.status = 'test';
-    paymentWebhook.createdBy = req.user._id;
+    // paymentWebhook.createdBy = req.user._id;
     await paymentWebhook.save();
     res.status(201).send();
   } catch (e) {
