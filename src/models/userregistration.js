@@ -329,13 +329,14 @@ userRegistrationSchema.methods.failPayment = async function (paymentId, orderId,
             console.log('Payment not found {} {}', orderId, paymentId);
             throw new Error('Payment not found');
         }
-        let {status, metaData} = await razorpayprovider.failPayment(paymentId);
-        payment.paymentResponse = metaData
+        if(paymentId){
+            let {status, metaData} = await razorpayprovider.failPayment(paymentId);
+            payment.paymentResponse = metaData
+        }
         await updatePaymentStatus(payment, 'failed', 'Payment Failed', this.lastModifiedBy);
         return {
             success: true,
             paymentId: payment._id,
-            status: status
         };
     } catch (error) {
         console.error(`Payment failure failed`,error);
