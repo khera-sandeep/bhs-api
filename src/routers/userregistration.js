@@ -16,7 +16,7 @@ router.post('/userRegistration', auth, async (req, res) => {
       createdBy: req.user._id,
       lastModifiedBy: req.user._id,
       ageGroup: UserRegistration.getAgeGroup(req.body.dateOfBirth),
-      status: 'PENDING',
+      status: 'pending',
       email: req.user.email,
       event: EventEnum.KHITAB_E_SWAR_2025,
       'age.value' : UserRegistration.getAge(req.body.dateOfBirth),

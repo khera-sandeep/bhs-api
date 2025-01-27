@@ -28,7 +28,7 @@ const ageDetails = new mongoose.Schema(
                 type: String,
                 required: true,
                 trim: true,
-                enum: ['AADHAR', 'PASSPORT', 'OTHER', 'BIRTH_CERTIFICATE']
+                enum: ['AADHAR', 'PASSPORT', 'OTHER', 'BIRTH_CERTIFICATE', 'PAN', 'DRIVING_LICENSE', 'VOTER_ID']
             },
             file: {
                 type: String,
