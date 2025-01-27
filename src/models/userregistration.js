@@ -256,9 +256,7 @@ userRegistrationSchema.methods.initiatePayment = async function (user) {
 async function updatePaymentStatus(payment, status, stausReason, lastModifiedBy) {
     payment.currentStatus = status;
     payment.statusReason = stausReason;
-    if(lastModifiedBy != null){
-        payment.lastModifiedBy = lastModifiedBy;
-    }
+    payment.lastModifiedBy = lastModifiedBy;
     /*
     update payment details and status
      */

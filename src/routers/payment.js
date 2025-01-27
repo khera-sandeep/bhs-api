@@ -4,6 +4,7 @@ const PaymentWebhook = require('../models/paymentwebhook');
 const router = new express.Router();
 const Payment = require("../models/payments");
 const UserRegistration = require("../models/userregistration");
+const User = require("../models/user");
 const {verifyWebhookSignature} = require("../payments/providers/razorpay");
 
 /**
@@ -17,17 +18,18 @@ const {verifyWebhookSignature} = require("../payments/providers/razorpay");
 async function processWebhookEvent(razPayPayment, payment, userRegistration, req, paymentwebhook) {
   try {
     console.log('Processing payment webhook event from razorpay {}', razPayPayment, razPayPayment.id, payment._id, userRegistration._id);
+    let user = await User.findOne({name: 'RazorPayWebhookUser'});
     if (req.body.event === 'payment.failed') {
-      await userRegistration.updatePaymentStatus(payment, razPayPayment.status, razPayPayment.error_code, null);
+      await userRegistration.updatePaymentStatus(payment, razPayPayment.status, razPayPayment.error_code, user._id);
     } else if (req.body.event === 'payment.captured') {
-      await userRegistration.updatePaymentStatus(payment, razPayPayment.status, 'Payment captured', null);
+      await userRegistration.updatePaymentStatus(payment, razPayPayment.status, 'Payment captured', user._id);
     } else if (req.body.event === 'payment.authorized') {
       if (payment.status !== 'captured' || payment.status !== 'failed' || payment.status !== 'refunded') {
-        await userRegistration.updatePaymentStatus(payment, razPayPayment.status, 'Payment authorized', null);
+        await userRegistration.updatePaymentStatus(payment, razPayPayment.status, 'Payment authorized', user._id);
       }
     } else if (req.body.event === 'refund.created') {
       payment.refundId = req.body.payload.refund.entity.id;
-      await userRegistration.updatePaymentStatus(payment, 'refunded', 'Payment refunded', null);
+      await userRegistration.updatePaymentStatus(payment, 'refunded', 'Payment refunded', user._id);
     } else {
       console.log('Event not handled {}', req.body.event);
     }
@@ -56,9 +58,9 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
     /*
     find payment object in the system
      */
-    payment = await Payment.findOne({'paymentResponse.id': razPayPayment.id});
+    payment = await Payment.findOne({'orderId': razPayPayment.order_id});
     if (!payment) {
-      console.log('Payment not found for webhook event {}', req.body);
+      console.log('Payment not found for webhook event {}', req.body, razPayPayment.order_id);
       throw new Error('Payment not found for webhook event');
     }
     userRegistration = UserRegistration.findOne({_id: payment.registration});
@@ -75,6 +77,7 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
     res.status(200).send();
   } catch (e) {
     console.log('Error while handling razpay webhook', e);
+    console.log('Error while handling razpay webhook body', JSON.stringify(req.body));
     res.status(400).send(e);
   }
 });
