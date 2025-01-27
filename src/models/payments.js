@@ -71,8 +71,7 @@ const paymentSchema = new mongoose.Schema(
             required: true
         },
         statusReason: {
-            type: String,
-            required: true
+            type: String
         },
         timeline: [paymentTimelineSchema],
         createdBy: {
@@ -114,13 +113,15 @@ paymentSchema.post('save', async function (doc) {
     let objectToSave = {};
     if (doc && (doc.currentStatus === 'created' || doc.currentStatus === 'captured' || doc.currentStatus === 'approved') && doc.paymentType === 'REGISTRATION_FEE') {
         objectToSave = {
-            status: 'REGISTERED',
+            status: 'registered',
+            statusReason: 'Registered successfully',
             lastModifiedBy: doc.lastModifiedBy
         };
 
     } else if (doc && doc.currentStatus === 'failed' && doc.paymentType === 'REGISTRATION_FEE') {
         objectToSave = {
-            status: 'REGISTERED',
+            status: 'failed',
+            statusReason:doc.statusReason,
             lastModifiedBy: doc.lastModifiedBy
         };
     }

@@ -92,9 +92,14 @@ async function failPayment(paymentId) {
     }
 }
 
+function verifyWebhookSignature (body, signature)  {
+    return Razorpay.validateWebhookSignature(body, signature, process.env.RAZOR_PAY_WEBHOOK_SECRET);
+}
+
 
 module.exports = {
     initiatePayment,
     completePayment,
-    failPayment
+    failPayment,
+    verifyWebhookSignature
 }

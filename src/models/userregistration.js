@@ -36,8 +36,8 @@ const ageDetails = new mongoose.Schema(
             },
             status: {
                 type: String,
-                enum: ['PENDING_VERIFICATION', 'VERIFIED', 'REJECTED'],
-                default: 'PENDING_VERIFICATION'
+                enum: ['pending_verification', 'verified', 'rejected'],
+                default: 'pending_verification'
             },
             ipAddress: {
                 type: String,
@@ -119,7 +119,10 @@ const userRegistrationSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['PENDING', 'REGISTERED', 'REJECTED', 'FAILED'],
+            enum: ['pending', 'registered', 'rejected', 'failed'],
+        },
+        statusReason: {
+            type: String
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
@@ -242,15 +245,36 @@ userRegistrationSchema.methods.initiatePayment = async function (user) {
     }
 };
 
-async function updatePaymentStatus(payment, status, stausReason, lastModifiedBy, response) {
+/**
+ * Method to update payment status
+ * @param payment
+ * @param status
+ * @param stausReason
+ * @param lastModifiedBy
+ * @returns {Promise<void>}
+ */
+async function updatePaymentStatus(payment, status, stausReason, lastModifiedBy) {
     payment.currentStatus = status;
-    payment.paymentResponse = response;
     payment.statusReason = stausReason;
-    payment.lastModifiedBy = lastModifiedBy;
+    if(lastModifiedBy != null){
+        payment.lastModifiedBy = lastModifiedBy;
+    }
     /*
     update payment details and status
      */
     await payment.save();
+}
+
+/**
+ * Method to udpate payment status
+ * @param payment
+ * @param status
+ * @param stausReason
+ * @param lastModifiedBy
+ * @returns {Promise<void>}
+ */
+userRegistrationSchema.methods.updatePaymentStatus = async function (payment, status, stausReason, lastModifiedBy) {
+    await updatePaymentStatus(payment, status, stausReason, lastModifiedBy);
 }
 
 // Add a static method to find users by age
@@ -283,7 +307,8 @@ userRegistrationSchema.methods.completePayment = async function (
         }
 
         let {status, metaData} = await razorpayprovider.completePayment(paymentId, orderId, signature);
-        await updatePaymentStatus(payment, status, 'Payment completed successfully', this.lastModifiedBy, metaData);
+        payment.paymentResponse = metaData
+        await updatePaymentStatus(payment, status, 'Payment completed successfully', this.lastModifiedBy);
         return {
             success: true,
             paymentId: payment._id,
@@ -307,7 +332,8 @@ userRegistrationSchema.methods.failPayment = async function (paymentId, orderId,
             throw new Error('Payment not found');
         }
         let {status, metaData} = await razorpayprovider.failPayment(paymentId);
-        await updatePaymentStatus(payment, status, 'Payment Failed', this.lastModifiedBy, metaData);
+        payment.paymentResponse = metaData
+        await updatePaymentStatus(payment, 'failed', 'Payment Failed', this.lastModifiedBy);
         return {
             success: true,
             paymentId: payment._id,
