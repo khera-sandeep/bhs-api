@@ -8,11 +8,13 @@ const RoleEnum = require('../enums/roleenum');
 
 router.post('/payment/webhook/razorpay/', async (req, res) => {
   try {
+
     const paymentWebhook = new PaymentWebhook();
     paymentWebhook.request = req.body;
     paymentWebhook.headers = req.headers;
     paymentWebhook.status = 'test';
     // paymentWebhook.createdBy = req.user._id;
+    console.log('Persisting payment webhook event from razorpay {}', req.body);
     await paymentWebhook.save();
     res.status(201).send();
   } catch (e) {
