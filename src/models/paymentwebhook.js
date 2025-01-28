@@ -17,6 +17,10 @@ const paymentWebhookSchema = new mongoose.Schema({
             required: true,
             default: 'RAZORPAY'
         },
+        error: {
+            type: String,
+            required: false
+        },
         status: {
             type: String,
             required: true,

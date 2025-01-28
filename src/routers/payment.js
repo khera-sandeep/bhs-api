@@ -38,6 +38,7 @@ async function processWebhookEvent(razPayPayment, payment, userRegistration, req
   } catch (e) {
     console.error('Error while processing webhook event from razorpay', e);
     paymentwebhook.status = 'failed';
+    paymentwebhook.error = JSON.stringify(e);
   } finally {
     await paymentwebhook.save();
   }
