@@ -83,7 +83,7 @@ router.get('/userRegistration/me', auth, authorizationMiddleware(RoleEnum.USER),
 router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
     try {
       const value = req.body['status'];
-      console.log('Inside patch userRegistration API for user {} operation {}', req.user.email, value);
+      console.log('Inside patch userRegistration API for user {} operation {}', req.user.email, value, req.params.id, req.params.paymentId);
       const razOrderId = req.body['orderId'];
       const razPaymentId = req.body['paymentId'];
       const signature = req.body['signature'];
@@ -114,9 +114,9 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       }
       let response = {};
       if (value === 'complete') {
-        response = await userRegistration.completePayment(razPaymentId, razOrderId, req.body.signature);
+        response = await userRegistration.completePayment(razPaymentId, razOrderId, req.body.signature, req.user._id);
       } else if (value === 'fail') {
-        response = await userRegistration.failPayment(razPaymentId, razOrderId, req.body.reason);
+        response = await userRegistration.failPayment(razPaymentId, razOrderId, req.body.reason, req.user._id);
       }
       res.send({
         ...response,

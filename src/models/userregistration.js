@@ -292,6 +292,7 @@ userRegistrationSchema.methods.completePayment = async function (
     paymentId,
     orderId,
     signature,
+    lastModifiedBy
 ) {
     try {
         // Find and update payment document
@@ -306,7 +307,7 @@ userRegistrationSchema.methods.completePayment = async function (
 
         let {status, metaData} = await razorpayprovider.completePayment(paymentId, orderId, signature);
         payment.paymentResponse = metaData
-        await updatePaymentStatus(payment, status, 'Payment completed successfully', this.lastModifiedBy);
+        await updatePaymentStatus(payment, status, 'Payment completed successfully', lastModifiedBy);
         return {
             success: true,
             paymentId: payment._id,
@@ -318,7 +319,7 @@ userRegistrationSchema.methods.completePayment = async function (
     }
 };
 
-userRegistrationSchema.methods.failPayment = async function (paymentId, orderId, reason) {
+userRegistrationSchema.methods.failPayment = async function (paymentId, orderId, reason, lastModifiedBy) {
     try {
         // Find and update payment document
         const payment = await Payment.findOne({
@@ -333,7 +334,7 @@ userRegistrationSchema.methods.failPayment = async function (paymentId, orderId,
             let {status, metaData} = await razorpayprovider.failPayment(paymentId);
             payment.paymentResponse = metaData
         }
-        await updatePaymentStatus(payment, 'failed', 'Payment Failed', this.lastModifiedBy);
+        await updatePaymentStatus(payment, 'failed', 'Payment Failed', lastModifiedBy);
         return {
             success: true,
             paymentId: payment._id,
