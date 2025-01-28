@@ -17,7 +17,6 @@ const paymentTimelineSchema = new mongoose.Schema({
     },
     metadata: {
         type: Object,
-        required: true
     },
     performedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +35,7 @@ const paymentSchema = new mongoose.Schema(
         currentStatus: {
             type: String,
             required: true,
-            enum: ['initiated','created', 'pending', 'captured', 'settled', 'refunded', 'failed', 'approved']
+            enum: ['initiated','created', 'pending', 'captured', 'settled', 'refunded', 'failed', 'authorized']
         },
         paymentGateway: {
             type: String,
@@ -110,14 +109,14 @@ paymentSchema.post('save', async function (doc) {
     }
     console.log('Updating registration status on payments status change {}', doc.currentStatus, doc._id);
     let objectToSave = {};
-    if (doc && (doc.currentStatus === 'created' || doc.currentStatus === 'captured' || doc.currentStatus === 'approved') && doc.paymentType === 'REGISTRATION_FEE') {
+    if (doc && (doc.currentStatus === 'created' || doc.currentStatus === 'captured' || doc.currentStatus === 'authorized') && doc.paymentType === 'REGISTRATION_FEE') {
         objectToSave = {
             status: 'registered',
             statusReason: 'Registered successfully',
             lastModifiedBy: doc.lastModifiedBy
         };
 
-    } else if (doc && doc.currentStatus === 'failed' && doc.paymentType === 'REGISTRATION_FEE') {
+    } else if (doc && (doc.currentStatus === 'failed' || doc.currentStatus === 'refunded') && doc.paymentType === 'REGISTRATION_FEE') {
         objectToSave = {
             status: 'failed',
             statusReason:doc.statusReason,

@@ -64,7 +64,7 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
       console.log('Payment not found for webhook event {}', req.body, razPayPayment.order_id);
       throw new Error('Payment not found for webhook event');
     }
-    userRegistration = UserRegistration.findOne({_id: mongoose.Types.ObjectId(payment.registration)});
+    userRegistration = await UserRegistration.findOne({_id: mongoose.Types.ObjectId(payment.registration)});
     if (!userRegistration || !userRegistration._id) {
       console.log('User registration not found for payment {}', payment._id, payment.registration, req.body);
       throw new Error('User registration not found for payment');
