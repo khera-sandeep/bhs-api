@@ -44,7 +44,7 @@ async function processWebhookEvent(razPayPayment, payment, userRegistration, req
 }
 
 router.post('/payment/webhook/razorpay/', async (req, res) => {
-  console.log('Processing webhook event from razorpay {}', req.body);
+  console.log('Handling webhook event from razorpay {}', req.body);
   let userRegistration;
   let payment;
   let razPayPayment;
