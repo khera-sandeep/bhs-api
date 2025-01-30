@@ -7,6 +7,7 @@ const userRegistrationRouter = require('./routers/userregistration');
 const paymentWebhookRouter = require('./routers/payment');
 const cors = require('cors');
 const rateLimit = require("express-rate-limit");
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -33,5 +34,9 @@ app.use(userRouter);
 app.use(termVersionRouter);
 app.use(userRegistrationRouter);
 app.use(paymentWebhookRouter);
+
+
+// Serve images from a specific folder
+app.use('/images', express.static(path.join(__dirname, '/assets/images')));
 
 module.exports = app;
