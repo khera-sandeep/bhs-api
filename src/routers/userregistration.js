@@ -11,6 +11,7 @@ const RoleEnum = require("../enums/roleenum");
 router.post('/userRegistration', auth, async (req, res) => {
   try {
     console.log('Inside userRegistration API {} {}', req.body.name, req.body.email);
+    const isTestRegistration =  process.env.RAZOR_PAY_KEY_ID && process.env.RAZOR_PAY_KEY_ID.includes('test');
     const userRegistration = new UserRegistration({
       ...req.body,
       createdBy: req.user._id,
@@ -20,6 +21,11 @@ router.post('/userRegistration', auth, async (req, res) => {
       email: req.user.email,
       event: EventEnum.KHITAB_E_SWAR_2025,
       'age.value' : UserRegistration.getAge(req.body.dateOfBirth),
+      isTestRegistration: isTestRegistration,
+      notification: {
+        isSuccessEmailSent:false,
+        isFailureEmailSent: false,
+      }
     });
     await userRegistration.save();
     let {paymentId, orderId} = await userRegistration.initiatePayment(req.user);

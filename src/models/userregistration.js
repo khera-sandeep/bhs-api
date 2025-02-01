@@ -5,6 +5,7 @@ const TermVersion = require('./termsversion');
 const EventEnum = require('../enums/eventenum');
 const razorpayprovider = require('../payments/providers/razorpay');
 const Payment = require("./payments");
+const EventConfiguration = require('./eventconfiguration');
 
 
 // Create a Counter Schema
@@ -13,6 +14,12 @@ const CounterSchema = new mongoose.Schema({
     seq: { type: Number, default: 0 }
 });
 
+// Create a Notification Schema
+const NotificationSchema = new mongoose.Schema({
+    isSuccessEmailSent: {type: Boolean, default: false},
+    isFailureEmailSent: {type: Boolean, default: false},
+    isRefundEmailSent: {type: Boolean, default: false}
+});
 
 const ageDetails = new mongoose.Schema(
     {
@@ -159,9 +166,11 @@ const userRegistrationSchema = new mongoose.Schema(
                     if (EventEnum.KHITAB_E_SWAR_2025 == event) {
                         let age = this.age.value;
                         if (age <= 17) {
-                            return amount === 450
+                            const juniorAmount = await EventConfiguration.getConfiguration(this.event, 'registrationAmount', 'JUNIOR');
+                            return amount === juniorAmount
                         } else {
-                            return amount === 750
+                            const seniorAmount = await EventConfiguration.getConfiguration(this.event, 'registrationAmount', 'SENIOR');
+                            return amount === seniorAmount
                         }
                     }
 
@@ -173,6 +182,10 @@ const userRegistrationSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'payments'
         }],
+        notification: NotificationSchema,
+        isTestRegistration: {
+            type: Boolean,
+        }
     },
     {
         timestamps: true,

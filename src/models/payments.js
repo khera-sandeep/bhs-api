@@ -3,6 +3,8 @@ const validator = require('validator');
 const addressSchema = require('./address');
 const TermVersion = require('./termsversion');
 const EventEnum = require('../enums/eventenum');
+const {sendEmail} = require("../emails/email");
+const EventConfiguration = require('./eventconfiguration');
 
 // 2. Payment Timeline Schema (Sub-document)
 const paymentTimelineSchema = new mongoose.Schema({
@@ -119,14 +121,52 @@ paymentSchema.post('save', async function (doc) {
     } else if (doc && (doc.currentStatus === 'failed' || doc.currentStatus === 'refunded') && doc.paymentType === 'REGISTRATION_FEE') {
         objectToSave = {
             status: 'failed',
-            statusReason:doc.statusReason,
+            statusReason: doc.statusReason,
             lastModifiedBy: doc.lastModifiedBy
         };
     }
-    await mongoose.model('user_registrations').findByIdAndUpdate(
+    const userRegistration = await mongoose.model('user_registrations').findByIdAndUpdate(
         doc.registration,
         objectToSave,
+        {new: true}
     );
+
+    /*
+    Send emails out for the event
+     */
+    if (userRegistration.status === 'registered' && !userRegistration.notification.isSuccessEmailSent) {
+        const venueDateConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventDate', userRegistration.preferredAuditionLocation);
+        if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_SUCCESS', {
+            name: userRegistration.name,
+            eventCity: userRegistration.preferredAuditionLocation,
+            eventVenue: 'To be announced later',
+            registrationNumber: userRegistration.registrationNumber,
+            eventDate: venueDateConfig != null ? venueDateConfig : '-',
+            eventTime: '10:00 AM Onwards',
+        })) {
+            objectToSave = {
+                "notification.isSuccessEmailSent": true,
+            };
+            await mongoose.model('user_registrations').findByIdAndUpdate(
+                doc.registration,
+                { $set: objectToSave },
+                { new: true } // Returns the modified document
+            );
+        }
+    } else if (userRegistration.status === 'failed') {
+        if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_FAILURE', {
+            name: userRegistration.name,
+        })) {
+            objectToSave = {
+                "notification.isFailureEmailSent": true,
+            };
+            await mongoose.model('user_registrations').findByIdAndUpdate(
+                doc.registration,
+                { $set: objectToSave },
+                { new: true } // Returns the modified document
+            );
+        }
+    }
 });
 
 const Payment = mongoose.model('payments', paymentSchema);
