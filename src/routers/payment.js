@@ -57,6 +57,9 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
     console.log('Verifying signature for webhook event from razorpay {}', req.headers['x-razorpay-signature']);
     let isSignatureValid = verifyWebhookSignature(JSON.stringify(req.body), req.headers['x-razorpay-signature']);
     console.log('Signature verification status : ', isSignatureValid);
+    if(!isSignatureValid){
+      throw new Error('Invalid signature for webhook event');
+    }
     /*
     find payment object in the system
      */
