@@ -38,7 +38,7 @@ const REGISTRATION_SUCCESS_TEMPLATE = `<div style="font-family: 'Arial', sans-se
 
         <!-- CTA Button -->
         <div style="text-align: center; margin: 35px 0;">
-            <a href="https://bhs-api.onrender.com/images/kithab-e-swar-guidelines.html" style="background: linear-gradient(45deg, hsl(41.45deg 74.51% 60%), hsl(41.45deg 74.51% 40%)); color: black; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; transition: transform 0.3s ease;">Download Performance Guidelines</a>
+            <a href="https://bhs-api.onrender.com/images/khitab-e-swar-guidelines.html" style="background: linear-gradient(45deg, hsl(41.45deg 74.51% 60%), hsl(41.45deg 74.51% 40%)); color: black; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block; transition: transform 0.3s ease;">Download Performance Guidelines</a>
         </div>
 
         <p style="line-height: 1.6;">Questions? We're here to help! Reach out to us at:</p>

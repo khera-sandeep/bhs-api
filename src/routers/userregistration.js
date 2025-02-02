@@ -120,7 +120,7 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       }
       let response = {};
       if (value === 'complete') {
-        response = await userRegistration.completePayment(razPaymentId, razOrderId, req.body.signature, req.user._id);
+        response = await userRegistration.completePayment(razPaymentId, razOrderId, signature, req.user._id);
       } else if (value === 'fail') {
         response = await userRegistration.failPayment(razPaymentId, razOrderId, req.body.reason, req.user._id);
       }
