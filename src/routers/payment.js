@@ -19,6 +19,18 @@ const mongoose = require("mongoose");
 async function processWebhookEvent(razPayPayment, payment, userRegistration, req, paymentwebhook) {
   try {
     console.log('Processing payment webhook event from razorpay {}', razPayPayment, razPayPayment.id, payment._id, userRegistration._id);
+
+    /*
+    Checking for duplicate event that is not processed sucessfully.
+     */
+    let duplicateEvent = await PaymentWebhook.findOne({'headers.x-razorpay-event-id': paymentwebhook.headers['x-razorpay-event-id'], status: 'processed'});
+    if(duplicateEvent && duplicateEvent._id){
+      console.error('Duplicate event found for webhook event {}', paymentwebhook.headers['x-razorpay-event-id'], duplicateEvent._id);
+      throw new Error('Duplicate event found for webhook event');
+    }
+    /*
+    Check for this order id any earlier event has been processed which is
+     */
     let user = await User.findOne({name: 'RazorPayWebhookUser'});
     if (req.body.event === 'payment.failed') {
       await userRegistration.updatePaymentStatus(payment, razPayPayment.status, razPayPayment.error_code, user._id);
@@ -37,8 +49,12 @@ async function processWebhookEvent(razPayPayment, payment, userRegistration, req
     paymentwebhook.status = 'processed';
   } catch (e) {
     console.error('Error while processing webhook event from razorpay', e);
-    paymentwebhook.status = 'failed';
-    paymentwebhook.error = JSON.stringify(e);
+    if (e.message === 'Duplicate event found for webhook event') {
+      paymentwebhook.status = 'duplicate';
+    } else {
+      paymentwebhook.status = 'failed';
+      paymentwebhook.error = JSON.stringify(e);
+    }
   } finally {
     await paymentwebhook.save();
   }

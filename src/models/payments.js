@@ -136,13 +136,14 @@ paymentSchema.post('save', async function (doc) {
      */
     if (userRegistration.status === 'registered' && !userRegistration.notification.isSuccessEmailSent) {
         const venueDateConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventDate', userRegistration.preferredAuditionLocation);
+        const venueEventConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventVenue', userRegistration.preferredAuditionLocation);
         if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_SUCCESS', {
             name: userRegistration.name,
             eventCity: userRegistration.preferredAuditionLocation,
-            eventVenue: 'To be announced later',
+            eventVenue: venueEventConfig != null ? venueEventConfig : 'To be announced later',
             registrationNumber: userRegistration.registrationNumber,
             eventDate: venueDateConfig != null ? venueDateConfig : '-',
-            eventTime: '10:00 AM Onwards',
+            eventTime: '09:00 AM Onwards',
         })) {
             objectToSave = {
                 "notification.isSuccessEmailSent": true,

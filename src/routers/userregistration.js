@@ -7,6 +7,7 @@ const UserRegistration = require('../models/userregistration');
 const Payment = require('../models/payments');
 const EventEnum = require('../enums/eventenum');
 const RoleEnum = require("../enums/roleenum");
+const EventConfiguration = require("../models/eventconfiguration");
 
 router.post('/userRegistration', auth, async (req, res) => {
   try {
@@ -79,7 +80,19 @@ router.get('/userRegistration/me', auth, authorizationMiddleware(RoleEnum.USER),
     console.log('Inside get userRegistration API for user {} {}', req.user.email, req.user._id);
     let uid = mongoose.Types.ObjectId(_id);
     const userRegistration = await UserRegistration.find({ createdBy: uid });
-    res.send(userRegistration);
+    let responseArray = [];
+
+   for(i = 0; i < userRegistration.length; i++) {
+     let registration = userRegistration[i];
+     const venueDate = await EventConfiguration.getConfiguration(registration.event, 'eventDate', registration.preferredAuditionLocation);
+     let venueEvent = await EventConfiguration.getConfiguration(registration.event, 'eventVenue', registration.preferredAuditionLocation);
+     if(venueEvent === null) {
+       venueEvent = 'Yet to be announced ';
+     }
+     let registrationObj = registration.toObject();
+     responseArray.push({...registrationObj, venueDate, venueEvent});
+   }
+    res.send(responseArray);
   } catch (e) {
     console.log('Error while getting record with id {}', _id, e);
     res.status(404).send();

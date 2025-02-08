@@ -24,7 +24,7 @@ const paymentWebhookSchema = new mongoose.Schema({
         status: {
             type: String,
             required: true,
-            enum: ['new', 'processed', 'failed'],
+            enum: ['new', 'processed', 'failed', 'duplicate'],
             default: 'new'
         },
        createdBy: {
