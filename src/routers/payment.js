@@ -18,7 +18,7 @@ const mongoose = require("mongoose");
  */
 async function processWebhookEvent(razPayPayment, payment, userRegistration, req, paymentwebhook) {
   try {
-    console.log('Processing payment webhook event from razorpay {}', razPayPayment, razPayPayment.id, payment._id, userRegistration._id);
+    console.log('Processing payment webhook event from razorpay {}', req.body.event, razPayPayment.id, payment._id, userRegistration._id, razPayPayment.status);
 
     /*
     Checking for duplicate event that is not processed sucessfully.
@@ -89,7 +89,7 @@ router.post('/payment/webhook/razorpay/', async (req, res) => {
       console.log('User registration not found for payment {}', payment._id, payment.registration, req.body);
       throw new Error('User registration not found for payment');
     }
-    console.log('Persisting payment webhook event from razorpay', razPayPayment.id, payment._id, userRegistration._id, razPayPayment.status);
+    console.log('Persisting payment webhook event from razorpay', req.body.event, razPayPayment.id, payment._id, userRegistration._id, razPayPayment.status);
     await paymentWebhook.save();
     /*
     Processing webhook event.

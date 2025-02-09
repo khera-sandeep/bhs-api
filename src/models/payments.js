@@ -103,6 +103,76 @@ paymentSchema.pre('save', function(next) {
 });
 
 // Middleware for updating registration status after payments
+async function sendNotification(userRegistration, objectToSave, doc) {
+    try{
+        const result = await mongoose.model('user_registrations').findOneAndUpdate(
+            {
+                _id: doc.registration,
+                'notification.isEmailInProgress': false
+            },
+            {$set: {'notification.isEmailInProgress': true}},
+            {new: true}
+        );
+            /*
+        Send emails out for the event
+         */
+        if (result) {
+            if (userRegistration.status === 'registered' && !userRegistration.notification.isSuccessEmailSent) {
+                const venueDateConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventDate', userRegistration.preferredAuditionLocation);
+                const venueEventConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventVenue', userRegistration.preferredAuditionLocation);
+                if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_SUCCESS', {
+                    name: userRegistration.name,
+                    eventCity: userRegistration.preferredAuditionLocation,
+                    eventVenue: venueEventConfig != null ? venueEventConfig : 'To be announced later',
+                    registrationNumber: userRegistration.registrationNumber,
+                    eventDate: venueDateConfig != null ? venueDateConfig : '-',
+                    eventTime: '09:00 AM Onwards',
+                })) {
+                    objectToSave = {
+                        "notification.isSuccessEmailSent": true,
+                    };
+                    await mongoose.model('user_registrations').findByIdAndUpdate(
+                        doc.registration,
+                        {$set: objectToSave},
+                        {new: true} // Returns the modified document
+                    );
+                }
+            } else if (userRegistration.status === 'failed') {
+                if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_FAILURE', {
+                    name: userRegistration.name,
+                })) {
+                    objectToSave = {
+                        "notification.isFailureEmailSent": true,
+                    };
+                    await mongoose.model('user_registrations').findByIdAndUpdate(
+                        doc.registration,
+                        {$set: objectToSave},
+                        {new: true} // Returns the modified document
+                    );
+                }
+            }
+        }
+        else {
+            console.log('Not sending email as email already in progress');
+        }
+    }catch (e) {
+        console.error('Error while sending email status', e);
+    } finally {
+        try {
+            const result = await mongoose.model('user_registrations').findOneAndUpdate(
+                {
+                    _id: doc.registration,
+                    'notification.isEmailInProgress': true
+                },
+                {$set: {'notification.isEmailInProgress': false}},
+                {new: true}
+            );
+        } catch (e) {
+            console.error('Error while updating email status', e);
+        }
+    }
+}
+
 // Correct way - handles both save and merge
 paymentSchema.post('save', async function (doc) {
     // For findOneAndUpdate, we need to fetch the document if it's not provided
@@ -130,44 +200,7 @@ paymentSchema.post('save', async function (doc) {
         objectToSave,
         {new: true}
     );
-
-    /*
-    Send emails out for the event
-     */
-    if (userRegistration.status === 'registered' && !userRegistration.notification.isSuccessEmailSent) {
-        const venueDateConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventDate', userRegistration.preferredAuditionLocation);
-        const venueEventConfig = await EventConfiguration.getConfiguration(userRegistration.event, 'eventVenue', userRegistration.preferredAuditionLocation);
-        if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_SUCCESS', {
-            name: userRegistration.name,
-            eventCity: userRegistration.preferredAuditionLocation,
-            eventVenue: venueEventConfig != null ? venueEventConfig : 'To be announced later',
-            registrationNumber: userRegistration.registrationNumber,
-            eventDate: venueDateConfig != null ? venueDateConfig : '-',
-            eventTime: '09:00 AM Onwards',
-        })) {
-            objectToSave = {
-                "notification.isSuccessEmailSent": true,
-            };
-            await mongoose.model('user_registrations').findByIdAndUpdate(
-                doc.registration,
-                { $set: objectToSave },
-                { new: true } // Returns the modified document
-            );
-        }
-    } else if (userRegistration.status === 'failed') {
-        if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_FAILURE', {
-            name: userRegistration.name,
-        })) {
-            objectToSave = {
-                "notification.isFailureEmailSent": true,
-            };
-            await mongoose.model('user_registrations').findByIdAndUpdate(
-                doc.registration,
-                { $set: objectToSave },
-                { new: true } // Returns the modified document
-            );
-        }
-    }
+    await sendNotification(userRegistration, objectToSave, doc);
 });
 
 const Payment = mongoose.model('payments', paymentSchema);

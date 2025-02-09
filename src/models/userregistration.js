@@ -18,7 +18,8 @@ const CounterSchema = new mongoose.Schema({
 const NotificationSchema = new mongoose.Schema({
     isSuccessEmailSent: {type: Boolean, default: false},
     isFailureEmailSent: {type: Boolean, default: false},
-    isRefundEmailSent: {type: Boolean, default: false}
+    isRefundEmailSent: {type: Boolean, default: false},
+    isEmailInProgress: {type: Boolean, default: false},
 });
 
 const ageDetails = new mongoose.Schema(

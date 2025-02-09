@@ -26,6 +26,7 @@ router.post('/userRegistration', auth, async (req, res) => {
       notification: {
         isSuccessEmailSent:false,
         isFailureEmailSent: false,
+        isEmailInProgress: false
       }
     });
     await userRegistration.save();
