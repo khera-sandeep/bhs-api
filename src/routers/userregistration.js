@@ -66,7 +66,22 @@ router.get('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN),
           }
           else {filter[queryKey] = value;}
         }
-        let registrationList = await UserRegistration.find(filter).limit(limit).skip(skip).sort({ createdAt: -1 });
+        let registrationList = await UserRegistration.find(filter)
+            .select({
+              name: 1,
+              email: 1,
+              status: 1,
+              event: 1,
+              address: 1,
+              preferredAuditionLocation: 1,
+              mobileNumber: 1,
+              registrationAmount: 1,
+              ageGroup: 1,
+              registrationNumber: 1,
+              guardianName: 1,
+              createdAt: 1
+            })
+            .limit(limit).skip(skip).sort({ createdAt: -1 });
         let count  = await UserRegistration.countDocuments(filter);
         console.log('Count returned {} {}', req.query, count);
         res.send({data: registrationList, count: count});
@@ -94,6 +109,20 @@ router.get('/userRegistration/me', auth, authorizationMiddleware(RoleEnum.USER),
      responseArray.push({...registrationObj, venueDate, venueEvent});
    }
     res.send(responseArray);
+  } catch (e) {
+    console.log('Error while getting record with id {}', _id, e);
+    res.status(404).send();
+  }
+});
+
+router.get('/userRegistration/:id', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
+  const _id = req.user._id;
+  let regId =  req.params.id;
+  try {
+    console.log('Inside userRegistration Get By Id API for user {} {}', req.user.email, req.user._id, regId);
+    const uid = mongoose.Types.ObjectId(regId);
+    const userRegistration = await UserRegistration.findById(uid);
+    res.send(userRegistration);
   } catch (e) {
     console.log('Error while getting record with id {}', _id, e);
     res.status(404).send();
