@@ -15,7 +15,7 @@ const l = async (req, res, next) => {
         req.decodedToken=decoded;
         next();
     } catch (e) {
-        console.log("Error while authenticating user", e);
+        console.log("Error while authenticating user using auth-local validator", req.url, req.method, e);
         res.status(401).send({ error: 'Please authenticate.' })
     }
 }
