@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
 const path = require('path');
 
 const app = express();
-app.use(express.json({ limit: '7mb' }));
+app.use(express.json({ limit: '15mb' }));
 app.use(
     cors({
         origin: process.env.ALLOWED_ORIGIN,
