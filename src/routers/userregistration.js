@@ -86,6 +86,7 @@ router.get('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN),
         console.log('Count returned {} {}', req.query, count);
         res.send({data: registrationList, count: count});
       } catch (e) {
+        console.error('Error while getting userRegistration list ', e);
         res.status(500).send();
       }
     });
