@@ -6,6 +6,8 @@ const EventEnum = require('../enums/eventenum');
 const razorpayprovider = require('../payments/providers/razorpay');
 const Payment = require("./payments");
 const EventConfiguration = require('./eventconfiguration');
+const LinkedDocument = require("./linkeddocument");
+
 
 
 // Create a Counter Schema
@@ -40,7 +42,6 @@ const ageDetails = new mongoose.Schema(
             },
             file: {
                 type: String,
-                required: true
             },
             status: {
                 type: String,
@@ -217,6 +218,17 @@ function getAge(dateOfBirth) {
  */
 userRegistrationSchema.statics.getAge = function (dateOfBirth) {
     return getAge(dateOfBirth);
+}
+
+/**
+ * Method to get documents linked with this user registration
+ * @returns {Promise<void>}
+ */
+userRegistrationSchema.methods.getLinkedDocuments = async function () {
+    let uid = mongoose.Types.ObjectId(this._id);
+    const linkedDocumentList = await
+        LinkedDocument.find({userRegistrationId: uid});
+    return linkedDocumentList;
 }
 
 /**

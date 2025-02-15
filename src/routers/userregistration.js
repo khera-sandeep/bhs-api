@@ -8,10 +8,11 @@ const Payment = require('../models/payments');
 const EventEnum = require('../enums/eventenum');
 const RoleEnum = require("../enums/roleenum");
 const EventConfiguration = require("../models/eventconfiguration");
+const LinkedDocument = require("../models/linkeddocument");
 
 router.post('/userRegistration', auth, async (req, res) => {
   try {
-    console.log('Inside userRegistration API {} {}', req.body.name, req.body.email);
+    console.log('Inside userRegistration API {} {}', req.body.name, req.body.email, req.body.dateOfBirth);
     const isTestRegistration =  process.env.RAZOR_PAY_KEY_ID && process.env.RAZOR_PAY_KEY_ID.includes('test');
     const userRegistration = new UserRegistration({
       ...req.body,
@@ -29,7 +30,32 @@ router.post('/userRegistration', auth, async (req, res) => {
         isEmailInProgress: false
       }
     });
+
+    /*
+    Preparing linked documents
+     */
+    let ageProf = new LinkedDocument({
+        document: userRegistration.age.prof.file,
+        type: userRegistration.age.prof.type,
+        createdBy: req.user._id,
+        lastModifiedBy: req.user._id
+    });
+
+    let profilePicture = new LinkedDocument({
+        document: userRegistration.profilePhoto,
+        type: 'PROFILE_PICTURE',
+        createdBy: req.user._id,
+        lastModifiedBy: req.user._id
+    });
+
+    userRegistration.age.prof.file = null;
+    userRegistration.profilePhoto = null;
     await userRegistration.save();
+    ageProf.userRegistrationId = userRegistration._id;
+    await ageProf.save();
+    profilePicture.userRegistrationId = userRegistration._id;
+    await profilePicture.save();
+
     let {paymentId, orderId} = await userRegistration.initiatePayment(req.user);
     res.status(201).send({
       userRegistrationId: userRegistration._id,
@@ -130,6 +156,21 @@ router.get('/userRegistration/:id', auth, authorizationMiddleware(RoleEnum.ADMIN
   }
 });
 
+router.get('/userRegistration/:id/documents', auth , async (req, res) => {
+  const _id = req.user._id;
+  let regId =  req.params.id;
+  try {
+    console.log('Inside document get By Id API for user {} {}', req.user.email, req.user._id, regId);
+    const uid = mongoose.Types.ObjectId(regId);
+    const userRegistration = await UserRegistration.findById(uid);
+    const linkedDocuments = await userRegistration.getLinkedDocuments();
+    res.send(linkedDocuments);
+  } catch (e) {
+    console.log('Error while document get By Id API {}', _id, e);
+    res.status(500).send();
+  }
+});
+
 router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
     try {
       const value = req.body['status'];
@@ -176,6 +217,59 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
       ;
   } catch (e) {
     res.status(400).send(e);
+  }
+});
+
+router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
+  const _id = req.user._id;
+  let regId =  req.params.id;
+  try {
+    const uid = mongoose.Types.ObjectId(regId);
+    const userRegistrationList = await UserRegistration.find({});
+    console.log('userRegistration List', userRegistrationList.length);
+    for(let i = 0; i < userRegistrationList.length; i++) {
+      let userRegistration = userRegistrationList[i];
+      console.log('Processing for user registration', userRegistration._id, userRegistration.name, userRegistration.email);
+
+      if(userRegistration.age.prof.file === null && userRegistration.profilePhoto === null) {
+        console.log('No documents to migrate for user registration', userRegistration._id, userRegistration.name, userRegistration.email);
+        continue;
+      }
+
+      /*
+   Preparing linked documents
+    */
+      let ageProf = new LinkedDocument({
+        document: userRegistration.age.prof.file,
+        type: userRegistration.age.prof.type,
+        userRegistrationId: userRegistration._id,
+        createdBy: userRegistration.createdBy,
+        lastModifiedBy: userRegistration.createdBy
+      });
+
+      let profilePicture = new LinkedDocument({
+        document: userRegistration.profilePhoto,
+        type: 'PROFILE_PICTURE',
+        userRegistrationId: userRegistration._id,
+        createdBy: userRegistration.createdBy,
+        lastModifiedBy: userRegistration.createdBy
+      });
+      ageProf.save();
+      profilePicture.save();
+      userRegistration.profilePhoto = null;
+      userRegistration.age.prof.file = null;
+      const result = await mongoose.model('user_registrations').findOneAndUpdate(
+          {
+            _id: userRegistration._id
+          },
+          {$set: {'profilePhoto': null, 'age.prof.file': null}},
+          {new: true}
+      );
+    }
+    res.send();
+  } catch (e) {
+    console.log('Error while getting record with id {}', _id, e);
+    res.status(404).send();
   }
 });
 
