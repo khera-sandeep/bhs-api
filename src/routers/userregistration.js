@@ -105,7 +105,8 @@ router.get('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN),
               ageGroup: 1,
               registrationNumber: 1,
               guardianName: 1,
-              createdAt: 1
+              createdAt: 1,
+              age: 1,
             })
             .limit(limit).skip(skip).sort({ createdAt: -1 });
         let count  = await UserRegistration.countDocuments(filter);
