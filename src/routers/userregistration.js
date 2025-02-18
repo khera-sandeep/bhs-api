@@ -9,6 +9,7 @@ const EventEnum = require('../enums/eventenum');
 const RoleEnum = require("../enums/roleenum");
 const EventConfiguration = require("../models/eventconfiguration");
 const LinkedDocument = require("../models/linkeddocument");
+const {ObjectId} = require("mongodb");
 
 router.post('/userRegistration', auth, async (req, res) => {
   try {
@@ -222,56 +223,26 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
   }
 });
 
-router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
+router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
   const _id = req.user._id;
-  let regId =  req.params.id;
   try {
-    const uid = mongoose.Types.ObjectId(regId);
-    const userRegistrationList = await UserRegistration.find({});
+    const userRegistrationList = await UserRegistration.find({ status: { $in: ['failed', 'pending'] } });
+    // const userRegistrationList = await UserRegistration.find({ _id: mongoose.Types.ObjectId('67b19e3c020712433f363eb2') });
     console.log('userRegistration List', userRegistrationList.length);
-    for(let i = 0; i < userRegistrationList.length; i++) {
+    for (let i = 0; i < userRegistrationList.length; i++) {
       let userRegistration = userRegistrationList[i];
       console.log('Processing for user registration', userRegistration._id, userRegistration.name, userRegistration.email);
-
-      if(userRegistration.age.prof.file === null && userRegistration.profilePhoto === null) {
-        console.log('No documents to migrate for user registration', userRegistration._id, userRegistration.name, userRegistration.email);
-        continue;
+      const linkedDocuments = await userRegistration.getLinkedDocuments();
+      for (let j = 0; j < linkedDocuments.length; j++) {
+        let likedDocument = linkedDocuments[j];
+        console.log('Removing linked document', likedDocument._id, likedDocument.type, userRegistration.email, userRegistration._id);
+        await likedDocument.remove();
       }
-
-      /*
-   Preparing linked documents
-    */
-      let ageProf = new LinkedDocument({
-        document: userRegistration.age.prof.file,
-        type: userRegistration.age.prof.type,
-        userRegistrationId: userRegistration._id,
-        createdBy: userRegistration.createdBy,
-        lastModifiedBy: userRegistration.createdBy
-      });
-
-      let profilePicture = new LinkedDocument({
-        document: userRegistration.profilePhoto,
-        type: 'PROFILE_PICTURE',
-        userRegistrationId: userRegistration._id,
-        createdBy: userRegistration.createdBy,
-        lastModifiedBy: userRegistration.createdBy
-      });
-      ageProf.save();
-      profilePicture.save();
-      userRegistration.profilePhoto = null;
-      userRegistration.age.prof.file = null;
-      const result = await mongoose.model('user_registrations').findOneAndUpdate(
-          {
-            _id: userRegistration._id
-          },
-          {$set: {'profilePhoto': null, 'age.prof.file': null}},
-          {new: true}
-      );
     }
     res.send();
   } catch (e) {
     console.log('Error while getting record with id {}', _id, e);
-    res.status(404).send();
+    res.status(500).send();
   }
 });
 
