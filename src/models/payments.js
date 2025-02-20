@@ -137,7 +137,7 @@ async function sendNotification(userRegistration, objectToSave, doc) {
                         {new: true} // Returns the modified document
                     );
                 }
-            } else if (userRegistration.status === 'failed') {
+            } else if (userRegistration.status === 'failed' && !userRegistration.notification.isFailureEmailSent) {
                 if (await sendEmail(userRegistration.email, EventEnum.KHITAB_E_SWAR_2025, 'REGISTRATION_FAILURE', {
                     name: userRegistration.name,
                 })) {
