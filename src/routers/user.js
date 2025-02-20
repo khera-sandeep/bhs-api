@@ -38,22 +38,23 @@ router.get('/user/me', auth, async (req, res) => {
   res.send(req.user);
 });
 
-router.patch('/user/me', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
+router.post('/user/me', auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ['name', 'email', 'password', 'age'];
+  console.log('User update request ', req.user.email);
+  const allowedUpdates = ['mobileNumber'];
   const isValidOperation = updates.every((update) =>
-    allowedUpdates.includes(update)
+      allowedUpdates.includes(update)
   );
-
   if (!isValidOperation) {
-    return res.status(400).send({ error: 'Invalid updates!' });
+    return res.status(400).send({error: 'Invalid updates!'});
   }
-
   try {
+    console.log('User update request ', req.user.email, req.body['mobileNumber']);
     updates.forEach((update) => (req.user[update] = req.body[update]));
     await req.user.save();
-    res.send(req.user);
+    res.send();
   } catch (e) {
+    console.error('Error while updating user ', req.user.email, e)
     res.status(400).send(e);
   }
 });

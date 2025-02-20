@@ -63,7 +63,12 @@ const userSchema = new mongoose.Schema(
         },
         origin: {
             type: String
-        }
+        },
+        mobileNumber: {
+            type: String,
+            minlength: 10,
+            maxlength: 10,
+        },
     },
     {
         timestamps: true,
