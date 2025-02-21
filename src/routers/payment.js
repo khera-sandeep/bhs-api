@@ -7,6 +7,7 @@ const UserRegistration = require("../models/userregistration");
 const User = require("../models/user");
 const {verifyWebhookSignature} = require("../payments/providers/razorpay");
 const mongoose = require("mongoose");
+const razorpayprovider = require("../payments/providers/razorpay");
 
 /**
  * Method to process webhook event from razorpay
@@ -33,7 +34,12 @@ async function processWebhookEvent(razPayPayment, payment, userRegistration, req
      */
     let user = await User.findOne({name: 'RazorPayWebhookUser'});
     if (req.body.event === 'payment.failed') {
-      await userRegistration.updatePaymentStatus(payment, razPayPayment.status, razPayPayment.error_code, user._id);
+      const isOrderPaid = await razorpayprovider.isOrderPaid(razPayPayment.order_id);
+      if (!isOrderPaid) {
+        await userRegistration.updatePaymentStatus(payment, razPayPayment.status, razPayPayment.error_code, user._id);
+      } else {
+        console.log('Order is already paid, not updating status to failed ', userRegistration._id, userRegistration.registrationNumber, razPayPayment.id, razPayPayment.order_id);
+      }
     } else if (req.body.event === 'payment.captured') {
       await userRegistration.updatePaymentStatus(payment, razPayPayment.status, 'Payment captured', user._id);
     } else if (req.body.event === 'payment.authorized') {

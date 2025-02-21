@@ -92,6 +92,25 @@ async function failPayment(paymentId) {
     }
 }
 
+/**
+ * Check if the order is paid
+ * @param orderId
+ * @returns {Promise<boolean>}
+ */
+async function isOrderPaid(orderId) {
+    try {
+        const order = await razorpay.orders.fetch(orderId);
+        if (order && order.status === 'paid') {
+            console.log('Order is paid', orderId);
+            return true;
+        }
+
+    } catch (error) {
+        console.log('Razorpay fetch order failure failed', error);
+    }
+    return false;
+}
+
 function verifyWebhookSignature (body, signature)  {
     return Razorpay.validateWebhookSignature(body, signature, process.env.RAZOR_PAY_WEBHOOK_SECRET);
 }
@@ -101,5 +120,6 @@ module.exports = {
     initiatePayment,
     completePayment,
     failPayment,
-    verifyWebhookSignature
+    verifyWebhookSignature,
+    isOrderPaid
 }
