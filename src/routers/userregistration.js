@@ -13,6 +13,7 @@ const {ObjectId} = require("mongodb");
 
 router.post('/userRegistration', auth, async (req, res) => {
   try {
+    let profilePicture;
     console.log('Inside userRegistration API {} {}', req.body.name, req.body.email, req.body.dateOfBirth);
     const isTestRegistration =  process.env.RAZOR_PAY_KEY_ID && process.env.RAZOR_PAY_KEY_ID.includes('test');
     const userRegistration = new UserRegistration({
@@ -42,21 +43,23 @@ router.post('/userRegistration', auth, async (req, res) => {
         lastModifiedBy: req.user._id
     });
 
-    let profilePicture = new LinkedDocument({
+    if (userRegistration.profilePhoto) {
+      profilePicture = new LinkedDocument({
         document: userRegistration.profilePhoto,
         type: 'PROFILE_PICTURE',
         createdBy: req.user._id,
         lastModifiedBy: req.user._id
-    });
-
+      });
+      userRegistration.profilePhoto = null;
+    }
     userRegistration.age.prof.file = null;
-    userRegistration.profilePhoto = null;
     await userRegistration.save();
     ageProf.userRegistrationId = userRegistration._id;
     await ageProf.save();
-    profilePicture.userRegistrationId = userRegistration._id;
-    await profilePicture.save();
-
+    if (profilePicture) {
+      profilePicture.userRegistrationId = userRegistration._id;
+      await profilePicture.save();
+    }
     let {paymentId, orderId} = await userRegistration.initiatePayment(req.user);
     res.status(201).send({
       userRegistrationId: userRegistration._id,
