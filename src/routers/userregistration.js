@@ -26,6 +26,7 @@ router.post('/userRegistration', auth, async (req, res) => {
       event: EventEnum.KHITAB_E_SWAR_2025,
       'age.value' : UserRegistration.getAge(req.body.dateOfBirth),
       isTestRegistration: isTestRegistration,
+      paymentMode: 'online',
       notification: {
         isSuccessEmailSent:false,
         isFailureEmailSent: false,
@@ -70,6 +71,65 @@ router.post('/userRegistration', auth, async (req, res) => {
   } catch (e) {
     console.log('Error while registering user', e);
     res.status(400).send({ errors: { message: e.message } });
+  }
+});
+
+router.post('/userRegistrationOffline', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
+  try {
+    let profilePicture;
+    console.log('Inside Offline userRegistration API {} {}', req.body.name, req.body.email, req.body.dateOfBirth);
+    const isTestRegistration = process.env.RAZOR_PAY_KEY_ID && process.env.RAZOR_PAY_KEY_ID.includes('test');
+    const userRegistration = new UserRegistration({
+      ...req.body,
+      createdBy: req.user._id,
+      lastModifiedBy: req.user._id,
+      ageGroup: UserRegistration.getAgeGroup(req.body.dateOfBirth),
+      status: 'registered',
+      email: req.user.email,
+      event: EventEnum.KHITAB_E_SWAR_2025,
+      'age.value': UserRegistration.getAge(req.body.dateOfBirth),
+      isTestRegistration: isTestRegistration,
+      paymentMode: 'offline',
+      notification: {
+        isSuccessEmailSent: false,
+        isFailureEmailSent: false,
+        isEmailInProgress: false
+      }
+    });
+
+    /*
+    Preparing linked documents
+     */
+    let ageProf = new LinkedDocument({
+      document: userRegistration.age.prof.file,
+      type: userRegistration.age.prof.type,
+      createdBy: req.user._id,
+      lastModifiedBy: req.user._id
+    });
+
+    if (userRegistration.profilePhoto) {
+      profilePicture = new LinkedDocument({
+        document: userRegistration.profilePhoto,
+        type: 'PROFILE_PICTURE',
+        createdBy: req.user._id,
+        lastModifiedBy: req.user._id
+      });
+      userRegistration.profilePhoto = null;
+    }
+    userRegistration.age.prof.file = null;
+    await userRegistration.save();
+    ageProf.userRegistrationId = userRegistration._id;
+    await ageProf.save();
+    if (profilePicture) {
+      profilePicture.userRegistrationId = userRegistration._id;
+      await profilePicture.save();
+    }
+    res.status(201).send({
+      registrationNumber: userRegistration.registrationNumber
+    });
+  } catch (e) {
+    console.log('Error while registering user Offline', e);
+    res.status(400).send({errors: {message: e.message}});
   }
 });
 

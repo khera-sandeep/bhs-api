@@ -76,7 +76,11 @@ const addressSchema = new mongoose.Schema({
                 // Check if city exists in the state's cities array
                 return stateData.cities.includes(city);
             },
-            message: props => `${props.value} is not a valid city for ${this.state}`
+            message: function(props) {
+                // Access the state from the same context as the validator
+                const state = this.state;
+                return `${props.value} is not a valid city for state`;
+            }
         }
     },
     district: {

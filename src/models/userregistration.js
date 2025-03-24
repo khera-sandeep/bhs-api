@@ -76,6 +76,9 @@ const userRegistrationSchema = new mongoose.Schema(
             type: String,
             enum: ['JUNIOR', 'SENIOR'],
         },
+        paymentMode: {
+            type: String,
+        },
         mobileNumber: {
             type: String,
             required: true,
