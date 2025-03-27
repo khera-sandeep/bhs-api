@@ -33,6 +33,7 @@ app.use((req, res, next) => {
    try{
        if(!req.originalUrl.includes('ping')){
            console.log(`Request to: ${req.method} ${req.originalUrl}`);
+
            // console.log('Headers:', req.headers);
            console.log('Body:', req.body); // Note: This will be empty before body-parser runs
 
