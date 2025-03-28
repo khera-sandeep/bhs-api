@@ -10,6 +10,32 @@ const rateLimit = require("express-rate-limit");
 const path = require('path');
 
 const app = express();
+
+app.use((req, res, next) => {
+    try{
+        if(req.originalUrl && !req.originalUrl.includes('ping')){
+            console.log(`Request to: ${req.method} ${req.originalUrl}`);
+
+            // console.log('Headers:', req.headers);
+            console.log('Body:', req.body); // Note: This will be empty before body-parser runs
+
+            // Capture raw body for debugging
+            let data = '';
+            req.on('data', chunk => {
+                data += chunk;
+            });
+
+            req.on('end', () => {
+                console.log('Raw body:', data);
+                // Continue with normal request processing
+            });
+        }
+    }catch (e){
+        console.log('Error in logging middleware', e);
+    }
+    next();
+});
+
 app.use(express.json({ limit: '15mb' }));
 app.use(
     cors({
@@ -29,30 +55,6 @@ const limiter = rateLimit({
 // Apply the rate limiting middleware to all requests.
 app.use(limiter)
 app.options('*', cors());
-app.use((req, res, next) => {
-   try{
-       if(!req.originalUrl.includes('ping')){
-           console.log(`Request to: ${req.method} ${req.originalUrl}`);
-
-           // console.log('Headers:', req.headers);
-           console.log('Body:', req.body); // Note: This will be empty before body-parser runs
-
-           // Capture raw body for debugging
-           let data = '';
-           req.on('data', chunk => {
-               data += chunk;
-           });
-
-           req.on('end', () => {
-               console.log('Raw body:', data);
-               // Continue with normal request processing
-           });
-       }
-   }catch (e){
-         console.log('Error in logging middleware', e);
-   }
-    next();
-});
 app.use(memberRouter);
 app.use(userRouter);
 app.use(termVersionRouter);
