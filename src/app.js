@@ -11,30 +11,30 @@ const path = require('path');
 
 const app = express();
 
-app.use((req, res, next) => {
-    try{
-        if(req.originalUrl && req.originalUrl.includes('/payment/webhook/razorpay/')){
-            console.log(`Request to: ${req.method} ${req.originalUrl}`);
-
-             console.log('Headers:', req.headers);
-            console.log('Body:', req.body); // Note: This will be empty before body-parser runs
-
-            // Capture raw body for debugging
-            let data = '';
-            req.on('data', chunk => {
-                data += chunk;
-            });
-
-            req.on('end', () => {
-                console.log('Raw body:', data);
-                // Continue with normal request processing
-            });
-        }
-    }catch (e){
-        console.log('Error in logging middleware', e);
-    }
-    next();
-});
+// app.use((req, res, next) => {
+//     try{
+//         if(req.originalUrl && req.originalUrl.includes('/payment/webhook/razorpay/')){
+//             console.log(`Request to: ${req.method} ${req.originalUrl}`);
+//
+//              console.log('Headers:', req.headers);
+//             console.log('Body:', req.body); // Note: This will be empty before body-parser runs
+//
+//             // Capture raw body for debugging
+//             let data = '';
+//             req.on('data', chunk => {
+//                 data += chunk;
+//             });
+//
+//             req.on('end', () => {
+//                 console.log('Raw body:', data);
+//                 // Continue with normal request processing
+//             });
+//         }
+//     }catch (e){
+//         console.log('Error in logging middleware', e);
+//     }
+//     next();
+// });
 
 app.use(express.json({ limit: '15mb' }));
 app.use(
