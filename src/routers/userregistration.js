@@ -156,8 +156,8 @@ router.get('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN),
           }
           else {filter[queryKey] = value;}
         }
-        // filter['preferredAuditionLocation']='Talwara';
-        // filter['status']='registered';
+        filter['preferredAuditionLocation']='Una';
+        filter['status']='registered';
 
         let registrationList = await UserRegistration.find(filter)
             .select({
@@ -292,7 +292,9 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
 router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
   const _id = req.user._id;
   try {
+    // { preferredAuditionLocation: { $in: ["Talwara"] }
     const userRegistrationList = await UserRegistration.find({ status: { $in: ['failed', 'pending'] } });
+    // const userRegistrationList = await UserRegistration.find({ preferredAuditionLocation: { $in: ["Talwara"] }});
     // const userRegistrationList = await UserRegistration.find({ _id: mongoose.Types.ObjectId('67b19e3c020712433f363eb2') });
     console.log('userRegistration List', userRegistrationList.length);
     for (let i = 0; i < userRegistrationList.length; i++) {
