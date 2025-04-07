@@ -293,8 +293,8 @@ router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnu
   const _id = req.user._id;
   try {
     // { preferredAuditionLocation: { $in: ["Talwara"] }
-    const userRegistrationList = await UserRegistration.find({ status: { $in: ['failed', 'pending'] } });
-    // const userRegistrationList = await UserRegistration.find({ preferredAuditionLocation: { $in: ["Talwara"] }});
+    // const userRegistrationList = await UserRegistration.find({ status: { $in: ['failed', 'pending'] } });
+    const userRegistrationList = await UserRegistration.find({ preferredAuditionLocation: { $in: ['Talwara','Una'] }});
     // const userRegistrationList = await UserRegistration.find({ _id: mongoose.Types.ObjectId('67b19e3c020712433f363eb2') });
     console.log('userRegistration List', userRegistrationList.length);
     for (let i = 0; i < userRegistrationList.length; i++) {
