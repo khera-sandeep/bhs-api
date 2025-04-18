@@ -156,8 +156,8 @@ router.get('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN),
           }
           else {filter[queryKey] = value;}
         }
-        filter['preferredAuditionLocation']='Gagret';
-        filter['status']='registered';
+        // filter['preferredAuditionLocation']='Gagret';
+        // filter['status']='registered';
 
         let registrationList = await UserRegistration.find(filter)
             .select({
