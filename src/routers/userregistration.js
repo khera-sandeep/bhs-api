@@ -11,7 +11,7 @@ const EventConfiguration = require("../models/eventconfiguration");
 const LinkedDocument = require("../models/linkeddocument");
 const {ObjectId} = require("mongodb");
 
-router.post('/userRegistration', auth, async (req, res) => {
+router.post('/userRegistration', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
   try {
     let profilePicture;
     console.log('Inside userRegistration API {} {}', req.body.name, req.body.email, req.body.dateOfBirth);
@@ -225,7 +225,7 @@ router.get('/userRegistration/:id', auth, authorizationMiddleware(RoleEnum.ADMIN
   }
 });
 
-router.get('/userRegistration/:id/documents', auth , async (req, res) => {
+router.get('/userRegistration/:id/documents', auth ,authorizationMiddleware(RoleEnum.USER), async (req, res) => {
   const _id = req.user._id;
   let regId =  req.params.id;
   try {
@@ -240,7 +240,7 @@ router.get('/userRegistration/:id/documents', auth , async (req, res) => {
   }
 });
 
-router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
+router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
     try {
       const value = req.body['status'];
       console.log('Inside patch userRegistration API for user {} operation {}', req.user.email, value, req.params.id, req.params.paymentId);
@@ -289,7 +289,7 @@ router.post('/userRegistration/:id/payment/:paymentId', auth, authorizationMiddl
   }
 });
 
-router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.USER), async (req, res) => {
+router.get('/migrateRegistrationDocument', auth, authorizationMiddleware(RoleEnum.ADMIN), async (req, res) => {
   const _id = req.user._id;
   try {
     // { preferredAuditionLocation: { $in: ["Talwara"] }
